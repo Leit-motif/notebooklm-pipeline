@@ -1,0 +1,11 @@
+# Core dependencies
+# Add your project dependencies here
+
+# Development dependencies
+pytest>=7.0.0
+black>=22.0.0
+isort>=5.0.0
+flake8>=4.0.0
+
+# Task Master AI (if needed)
+# task-master-ai>=0.26.0

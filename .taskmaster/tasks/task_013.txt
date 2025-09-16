@@ -1,0 +1,17 @@
+# Task ID: 13
+# Title: Set up GCP Project and Infrastructure
+# Status: pending
+# Dependencies: None
+# Priority: high
+# Description: Configure the Google Cloud Platform project with necessary services and permissions for the Chat to Podcast Generator microservice.
+# Details:
+1. Create a new GCP project or use an existing one
+2. Enable required APIs: Cloud Run, Cloud Storage, Discovery Engine (for NotebookLM Podcast API)
+3. Create a service account with roles/discoveryengine.podcastApiUser and roles/storage.objectAdmin permissions
+4. Create a GCS bucket for storing MP3 files and RSS feed
+5. Configure bucket permissions for public access to episodes and feed.xml
+6. Set up authentication for the service account
+7. Document all configuration details for future reference
+
+# Test Strategy:
+Verify all services are enabled by checking the GCP console. Test service account permissions by attempting to access the NotebookLM API and GCS bucket. Confirm public accessibility of the GCS bucket by accessing a test file via a public URL.

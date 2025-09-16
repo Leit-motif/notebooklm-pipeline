@@ -1,0 +1,19 @@
+# Task ID: 16
+# Title: Integrate with NotebookLM Podcast API
+# Status: pending
+# Dependencies: 13, 15
+# Priority: high
+# Description: Implement the integration with Google NotebookLM's Podcast API to generate MP3 files from transcripts.
+# Details:
+1. Create a NotebookLMClient class to handle API interactions
+2. Implement authentication using GCP metadata token
+3. Create method to submit transcript to NotebookLM API (POST to discoveryengine.googleapis.com/v1/projects/{PROJECT_ID}/locations/global/podcasts)
+4. Implement polling mechanism to check podcast generation status
+5. Add retry logic for API failures with exponential backoff
+6. Implement download functionality for the generated MP3
+7. Handle API quotas and rate limits
+8. Add detailed error handling and logging
+9. Implement timeout handling for long-running processes
+
+# Test Strategy:
+Test with sample transcripts of varying lengths. Verify successful API calls and MP3 generation. Test error handling by simulating API failures. Measure processing times for different input sizes to establish performance baselines.

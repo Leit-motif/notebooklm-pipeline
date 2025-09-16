@@ -1,0 +1,213 @@
+{
+  "master": {
+    "tasks": [
+      {
+        "id": 13,
+        "title": "Set up GCP Project and Infrastructure",
+        "description": "Configure the Google Cloud Platform project with necessary services and permissions for the Chat to Podcast Generator microservice.",
+        "details": "1. Create a new GCP project or use an existing one\n2. Enable required APIs: Cloud Run, Cloud Storage, Discovery Engine (for NotebookLM Podcast API)\n3. Create a service account with roles/discoveryengine.podcastApiUser and roles/storage.objectAdmin permissions\n4. Create a GCS bucket for storing MP3 files and RSS feed\n5. Configure bucket permissions for public access to episodes and feed.xml\n6. Set up authentication for the service account\n7. Document all configuration details for future reference",
+        "testStrategy": "Verify all services are enabled by checking the GCP console. Test service account permissions by attempting to access the NotebookLM API and GCS bucket. Confirm public accessibility of the GCS bucket by accessing a test file via a public URL.",
+        "priority": "high",
+        "dependencies": [],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 14,
+        "title": "Create FastAPI Service Skeleton",
+        "description": "Set up the basic FastAPI application structure with configuration and dependency management.",
+        "details": "1. Initialize a new Python project with proper directory structure\n2. Set up virtual environment and dependency management (requirements.txt or poetry)\n3. Install FastAPI and required dependencies (uvicorn, pydantic, google-cloud-storage, requests)\n4. Create main.py with FastAPI application initialization\n5. Implement basic health check endpoint (/health)\n6. Set up configuration management for environment variables\n7. Implement logging configuration\n8. Create Dockerfile for containerization\n9. Add README.md with setup instructions",
+        "testStrategy": "Run the application locally and verify the health check endpoint returns a 200 status code. Test the configuration loading with different environment variables. Verify the Docker container builds and runs correctly.",
+        "priority": "high",
+        "dependencies": [],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 15,
+        "title": "Implement Transcript Ingestion API",
+        "description": "Create the /make endpoint that accepts chat transcripts and metadata for podcast generation.",
+        "details": "1. Define PodcastRequest Pydantic model according to the PRD specification\n2. Implement POST /make endpoint\n3. Add request validation for required fields\n4. Implement input sanitization and preprocessing\n5. Add error handling for malformed requests\n6. Set up response model for successful and error responses\n7. Implement request logging for debugging\n8. Add rate limiting to prevent abuse\n9. Document the API endpoint with OpenAPI annotations",
+        "testStrategy": "Test the endpoint with valid and invalid JSON payloads. Verify validation errors are returned for missing required fields. Test with various transcript lengths to ensure proper handling. Use tools like Postman or curl to test the API manually.",
+        "priority": "high",
+        "dependencies": [
+          14
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 16,
+        "title": "Integrate with NotebookLM Podcast API",
+        "description": "Implement the integration with Google NotebookLM's Podcast API to generate MP3 files from transcripts.",
+        "details": "1. Create a NotebookLMClient class to handle API interactions\n2. Implement authentication using GCP metadata token\n3. Create method to submit transcript to NotebookLM API (POST to discoveryengine.googleapis.com/v1/projects/{PROJECT_ID}/locations/global/podcasts)\n4. Implement polling mechanism to check podcast generation status\n5. Add retry logic for API failures with exponential backoff\n6. Implement download functionality for the generated MP3\n7. Handle API quotas and rate limits\n8. Add detailed error handling and logging\n9. Implement timeout handling for long-running processes",
+        "testStrategy": "Test with sample transcripts of varying lengths. Verify successful API calls and MP3 generation. Test error handling by simulating API failures. Measure processing times for different input sizes to establish performance baselines.",
+        "priority": "high",
+        "dependencies": [
+          13,
+          15
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 17,
+        "title": "Implement Google Cloud Storage Integration",
+        "description": "Create a module to store generated MP3 files in Google Cloud Storage and manage public access.",
+        "details": "1. Create a StorageClient class using the Google Cloud Storage Python client\n2. Implement method to upload MP3 files to the /episodes/ directory in the GCS bucket\n3. Generate unique filenames based on date/time and content\n4. Set appropriate ACLs for public access\n5. Implement method to generate public URLs for uploaded files\n6. Add error handling for upload failures\n7. Implement cleanup functionality for temporary files\n8. Add logging for storage operations\n9. Implement file existence checking to prevent duplicates",
+        "testStrategy": "Upload test MP3 files to the GCS bucket and verify they are accessible via public URLs. Test error handling by simulating upload failures. Verify ACLs are correctly set by accessing files from an unauthenticated browser session.",
+        "priority": "medium",
+        "dependencies": [
+          13
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 18,
+        "title": "Create RSS Feed Generator",
+        "description": "Develop a module to generate and maintain an RSS feed XML file for podcast episodes.",
+        "details": "1. Create an RSSGenerator class to handle feed creation and updates\n2. Implement XML generation using a library like lxml or feedgen\n3. Define the RSS feed structure with required podcast elements (title, description, image, etc.)\n4. Implement method to add new episodes to the feed\n5. Create functionality to upload the updated feed.xml to GCS\n6. Implement validation to ensure valid XML\n7. Add backup mechanism to prevent feed corruption\n8. Implement concurrency handling for simultaneous updates\n9. Add logging for feed operations",
+        "testStrategy": "Generate test RSS feeds with sample episodes and validate the XML structure. Test feed updates by adding multiple episodes. Verify the feed works in popular podcast apps like Overcast and Spotify. Test concurrent updates to ensure feed integrity.",
+        "priority": "medium",
+        "dependencies": [
+          17
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 19,
+        "title": "Integrate Components in /make Endpoint",
+        "description": "Connect all components to create a complete workflow from transcript ingestion to podcast generation and RSS feed update.",
+        "details": "1. Update the /make endpoint to orchestrate the full process\n2. Implement sequential workflow: receive transcript → call NotebookLM API → store MP3 → update RSS feed\n3. Add proper error handling at each step\n4. Implement response generation with MP3 and RSS URLs\n5. Add transaction logging for the entire process\n6. Implement timeout handling for the complete workflow\n7. Add progress tracking for long-running operations\n8. Optimize performance where possible\n9. Ensure proper cleanup of temporary resources",
+        "testStrategy": "Test the complete workflow with real transcripts. Verify all steps execute correctly and the final response contains valid URLs. Test error scenarios at each step to ensure proper handling. Measure end-to-end processing time for performance benchmarking.",
+        "priority": "high",
+        "dependencies": [
+          15,
+          16,
+          17,
+          18
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 20,
+        "title": "Implement Cloud Run Deployment",
+        "description": "Set up continuous deployment to Google Cloud Run for the microservice.",
+        "details": "1. Create a cloud-build.yaml configuration file\n2. Set up GitHub Actions or Cloud Build triggers for CI/CD\n3. Configure Cloud Run service with appropriate memory and CPU allocations\n4. Set up environment variables for the Cloud Run service\n5. Configure service scaling parameters\n6. Set up custom domain if required\n7. Implement health checks for the deployed service\n8. Configure logging and monitoring\n9. Document the deployment process",
+        "testStrategy": "Deploy the service to Cloud Run and verify it's accessible. Test scaling by simulating multiple concurrent requests. Verify environment variables are correctly loaded. Test the CI/CD pipeline by making a small change and ensuring it's automatically deployed.",
+        "priority": "medium",
+        "dependencies": [
+          14,
+          19
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 21,
+        "title": "Add Authentication and Security",
+        "description": "Implement API key authentication and security measures for the service.",
+        "details": "1. Create an authentication middleware for FastAPI\n2. Implement API key validation\n3. Store API keys securely (e.g., in Secret Manager)\n4. Add rate limiting per API key\n5. Implement request logging with authentication information\n6. Add CORS configuration for web clients\n7. Implement security headers\n8. Add input validation and sanitization\n9. Document security measures and API key management",
+        "testStrategy": "Test API endpoints with and without valid API keys. Verify rate limiting works correctly. Test CORS with different origins. Attempt common security exploits to ensure they are properly mitigated.",
+        "priority": "medium",
+        "dependencies": [
+          15,
+          19
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 22,
+        "title": "Implement Transcript Preprocessing",
+        "description": "Create functionality to preprocess and optimize chat transcripts for podcast generation.",
+        "details": "1. Implement text cleaning and normalization\n2. Add functionality to handle special characters and formatting\n3. Implement chunking for long transcripts\n4. Create speaker identification and labeling\n5. Add functionality to remove irrelevant content\n6. Implement content structuring for better podcast flow\n7. Add language detection and validation\n8. Create functionality to handle code blocks and technical content\n9. Implement metadata extraction from transcripts",
+        "testStrategy": "Test preprocessing with various transcript formats and lengths. Verify chunking works correctly for transcripts exceeding API limits. Test with multilingual content and special characters. Compare podcast quality with and without preprocessing to measure improvement.",
+        "priority": "medium",
+        "dependencies": [
+          15
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 23,
+        "title": "Implement Scheduled Podcast Generation",
+        "description": "Create a scheduling system for automated daily podcast creation.",
+        "details": "1. Implement a scheduler using Cloud Scheduler or similar service\n2. Create an endpoint for scheduled triggers (/schedule)\n3. Implement configuration for scheduled jobs\n4. Add functionality to retrieve transcripts from a source system\n5. Implement batch processing for multiple transcripts\n6. Add error handling and notifications for scheduled jobs\n7. Implement logging and monitoring for scheduled operations\n8. Create retry mechanism for failed scheduled jobs\n9. Document scheduling configuration",
+        "testStrategy": "Set up test schedules and verify they trigger podcast generation. Test with various schedule configurations. Verify error handling by simulating failures during scheduled runs. Test notifications by triggering error conditions.",
+        "priority": "low",
+        "dependencies": [
+          19
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 24,
+        "title": "Implement Episode Tagging and Metadata",
+        "description": "Add functionality to tag episodes and manage podcast metadata.",
+        "details": "1. Extend the PodcastRequest model to include tags and additional metadata\n2. Update the RSS generator to include tags in the feed\n3. Implement search functionality based on tags\n4. Add metadata extraction from transcripts\n5. Create functionality to generate episode descriptions\n6. Implement categorization of episodes\n7. Add functionality to update episode metadata after creation\n8. Implement metadata validation\n9. Update API documentation for new metadata fields",
+        "testStrategy": "Test tag addition to episodes and verify they appear in the RSS feed. Test search functionality with various tag combinations. Verify metadata extraction from sample transcripts. Test with various podcast players to ensure metadata is correctly displayed.",
+        "priority": "low",
+        "dependencies": [
+          18,
+          19
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 25,
+        "title": "Implement Error Handling and Monitoring",
+        "description": "Enhance the service with comprehensive error handling, logging, and monitoring.",
+        "details": "1. Implement structured logging throughout the application\n2. Set up Cloud Monitoring for the service\n3. Create custom metrics for key operations\n4. Implement alerting for critical errors\n5. Add detailed error reporting\n6. Create a dashboard for service health\n7. Implement performance tracking\n8. Add request tracing\n9. Document monitoring and troubleshooting procedures",
+        "testStrategy": "Trigger various error conditions and verify they are properly logged and reported. Test alerting by simulating critical failures. Verify metrics are correctly recorded in Cloud Monitoring. Test the dashboard with real usage data.",
+        "priority": "medium",
+        "dependencies": [
+          19,
+          20
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 26,
+        "title": "Create Totem OS Integration",
+        "description": "Implement integration with Totem OS as a callable tool/agent.",
+        "details": "1. Research Totem OS tool registration requirements\n2. Create a Totem OS compatible interface\n3. Implement the tool registration process\n4. Add bi-directional communication for error handling\n5. Create documentation for Totem OS users\n6. Implement authentication specific to Totem OS\n7. Add logging for Totem OS interactions\n8. Create examples of Totem OS integration\n9. Test integration with Totem OS sandbox environment",
+        "testStrategy": "Test tool registration with Totem OS. Verify bi-directional communication works correctly. Test error scenarios to ensure proper handling. Create integration tests that simulate Totem OS calling the service.",
+        "priority": "low",
+        "dependencies": [
+          19,
+          21
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 27,
+        "title": "Create Documentation and Usage Examples",
+        "description": "Develop comprehensive documentation and usage examples for the service.",
+        "details": "1. Create API documentation with OpenAPI\n2. Write a detailed README.md\n3. Create usage examples with curl and Python\n4. Document deployment and configuration\n5. Create troubleshooting guide\n6. Add architecture diagrams\n7. Document security considerations\n8. Create user guide for podcast consumers\n9. Add examples for integration with other systems",
+        "testStrategy": "Review documentation for accuracy and completeness. Test examples to ensure they work as documented. Have team members follow the documentation to verify clarity. Test the OpenAPI documentation with Swagger UI.",
+        "priority": "medium",
+        "dependencies": [
+          19,
+          20,
+          21
+        ],
+        "status": "pending",
+        "subtasks": []
+      }
+    ],
+    "metadata": {
+      "created": "2025-09-16T23:14:02.634Z",
+      "updated": "2025-09-16T23:15:19.577Z",
+      "description": "Tasks for master context"
+    }
+  }
+}

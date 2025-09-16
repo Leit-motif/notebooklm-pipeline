@@ -1,0 +1,6 @@
+{
+  "dependencies": {
+    "ai": "^5.0.44",
+    "task-master": "^2.3.0"
+  }
+}

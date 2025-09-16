@@ -1,0 +1,19 @@
+# Task ID: 15
+# Title: Implement Transcript Ingestion API
+# Status: pending
+# Dependencies: 14
+# Priority: high
+# Description: Create the /make endpoint that accepts chat transcripts and metadata for podcast generation.
+# Details:
+1. Define PodcastRequest Pydantic model according to the PRD specification
+2. Implement POST /make endpoint
+3. Add request validation for required fields
+4. Implement input sanitization and preprocessing
+5. Add error handling for malformed requests
+6. Set up response model for successful and error responses
+7. Implement request logging for debugging
+8. Add rate limiting to prevent abuse
+9. Document the API endpoint with OpenAPI annotations
+
+# Test Strategy:
+Test the endpoint with valid and invalid JSON payloads. Verify validation errors are returned for missing required fields. Test with various transcript lengths to ensure proper handling. Use tools like Postman or curl to test the API manually.

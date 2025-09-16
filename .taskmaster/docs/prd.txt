@@ -1,0 +1,274 @@
+---
+
+# Overview
+
+The **Chat → Podcast Generator** is a standalone microservice that transforms chat transcripts (e.g., Amrit × Noesis conversations) into high-quality podcast episodes you can listen to on any podcast app.
+
+It leverages **Google NotebookLM's Podcast API** to automatically synthesize conversational, human-sounding audio episodes, stores them in **Google Cloud Storage**, and generates a **private RSS feed** for subscription.
+
+This solves the problem of **asynchronous reflection and review**: you can relive key conversations hands-free during workouts, walks, or commutes, turning daily dialogue into an immersive audio experience.
+
+* **Who it's for:**
+
+  * Primary: Amrit, as part of Totem OS, for self-reflection and productivity.
+  * Secondary: Knowledge workers and teams who want to capture and consume conversational knowledge via audio.
+* **Why it's valuable:**
+
+  * Converts raw conversations into easily consumable, podcast-style summaries.
+  * Reduces cognitive load by transforming reading into listening.
+  * Integrates into Totem OS as a callable tool/agent.
+
+---
+
+# Core Features
+
+### **1. Transcript Ingestion API**
+
+* **What it does:** Accepts chat text and metadata through a simple HTTP POST endpoint (`/make`).
+* **Why it's important:** Establishes a clean interface for Totem OS and external systems to submit content.
+* **How it works:** FastAPI service validates JSON payload → forwards to Podcast API.
+
+---
+
+### **2. Podcast Synthesis via NotebookLM API**
+
+* **What it does:** Calls Google NotebookLM's Podcast API to generate an MP3.
+* **Why it's important:** Produces natural, multi-voice conversational audio without needing to record live speakers.
+* **How it works:**
+
+  1. Sends transcript and configuration (length, focus, language).
+  2. Polls until processing completes.
+  3. Downloads the resulting MP3 file.
+
+---
+
+### **3. Cloud Storage for Episodes**
+
+* **What it does:** Stores generated MP3 files in a GCS bucket under `/episodes/`.
+* **Why it's important:** Centralized, scalable, secure storage with public links for playback.
+* **How it works:** Uploads MP3 using Google Cloud Storage Python client with appropriate ACLs.
+
+---
+
+### **4. Automatic RSS Feed Generation**
+
+* **What it does:** Maintains a `feed.xml` file so any podcast player can subscribe to episodes.
+* **Why it's important:** Allows passive, automated delivery of new episodes.
+* **How it works:** Each new episode appends an `<item>` block to the RSS XML file.
+
+---
+
+### **5. Standalone Deployment**
+
+* **What it does:** Runs as a stateless Cloud Run container.
+* **Why it's important:**
+
+  * Decoupled from Totem OS for modularity.
+  * Scales automatically.
+  * Can later be integrated as a callable tool.
+
+---
+
+# User Experience
+
+### **Personas**
+
+1. **Amrit (Primary User)**
+
+   * Goal: Hands-free review of daily reflections and deep philosophical chats.
+   * Pain Points: Limited time to re-read logs, difficulty integrating insights into life.
+   * Success Metric: Ability to listen to each day's conversations like a podcast.
+
+2. **Totem OS Agent (Future Caller)**
+
+   * Goal: Automate daily podcast generation without manual effort.
+   * Pain Points: Requires a clean API with predictable outputs.
+   * Success Metric: Reliable `/make` endpoint returning MP3 + RSS links.
+
+---
+
+### **User Flows**
+
+**Flow 1 — Manual Use:**
+
+1. Amrit copies chat transcript.
+2. Sends POST to `/make` via Postman or CLI.
+3. Waits 1–2 minutes.
+4. Opens returned RSS URL in Overcast/Spotify.
+5. Episode auto-downloads and plays.
+
+**Flow 2 — Automated Totem OS Integration:**
+
+1. Totem OS schedules a nightly cron job.
+2. Agent automatically posts the day's transcripts.
+3. Podcast episode is created overnight.
+4. Next morning, Amrit sees the new episode in their podcast app.
+
+---
+
+### **UI/UX Considerations**
+
+* **MVP:** No frontend. JSON API + auto-generated RSS feed.
+* **Future:** Minimal dashboard to view episodes and trigger manual regeneration.
+
+---
+
+# Technical Architecture
+
+### **System Components**
+
+1. **FastAPI Service** — core API layer (`/make` endpoint).
+2. **NotebookLM Podcast API** — external synthesis engine.
+3. **Google Cloud Storage** — MP3 and RSS storage.
+4. **RSS Generator Module** — lightweight XML updater.
+5. **Cloud Run Hosting** — containerized deployment.
+
+---
+
+### **Data Models**
+
+**PodcastRequest JSON:**
+
+```json
+{
+  "transcript": "<<< chat text >>>",
+  "title": "Amrit × Noesis — Daily Digest",
+  "description": "Auto-generated podcast episode.",
+  "focus": "Summarize into a clear, motivating podcast.",
+  "length": "STANDARD",
+  "languageCode": "en-US"
+}
+```
+
+**Response JSON:**
+
+```json
+{
+  "status": "ok",
+  "mp3": "https://storage.googleapis.com/bucket/episodes/20250916.mp3",
+  "rss": "https://storage.googleapis.com/bucket/feed.xml"
+}
+```
+
+---
+
+### **APIs and Integrations**
+
+* **NotebookLM Podcast API**
+
+  * Endpoint: `POST https://discoveryengine.googleapis.com/v1/projects/{PROJECT_ID}/locations/global/podcasts`
+  * Auth: GCP metadata token.
+  * Output: MP3 binary.
+
+* **Google Cloud Storage**
+
+  * Public object URLs for playback and feed hosting.
+
+---
+
+### **Infrastructure Requirements**
+
+* GCP Project with:
+
+  * Cloud Run
+  * GCS Bucket
+  * Enabled API: `discoveryengine.googleapis.com`
+* Service Account:
+
+  * `roles/discoveryengine.podcastApiUser`
+  * `roles/storage.objectAdmin`
+
+---
+
+# Development Roadmap
+
+### **Phase 1 — MVP**
+
+* `/make` endpoint with transcript ingest.
+* Podcast generation via NotebookLM API.
+* MP3 storage in GCS.
+* RSS feed generation.
+* Public links in response.
+
+---
+
+### **Phase 2 — Automation Enhancements**
+
+* Scheduled daily podcast creation.
+* Simple authentication (API keys).
+* Optional episode tagging.
+
+---
+
+### **Phase 3 — Dashboard UI**
+
+* Web interface for browsing episodes.
+* Manual trigger for regeneration.
+* Playback directly in browser.
+
+---
+
+### **Phase 4 — Totem OS Integration**
+
+* Register this service as a callable tool.
+* Trigger episodes from Totem OS events.
+* Bi-directional communication for error handling.
+
+---
+
+# Logical Dependency Chain
+
+1. **Foundation:**
+
+   * GCP setup → Cloud Run deployment → GCS bucket.
+   * Implement core `/make` endpoint with NotebookLM integration.
+
+2. **MVP Completion:**
+
+   * Add MP3 storage and RSS feed.
+
+3. **User Experience Layer:**
+
+   * Scheduler for automated runs.
+   * Authentication.
+
+4. **Full Integration:**
+
+   * Totem OS tool registration.
+
+---
+
+# Risks and Mitigations
+
+| Risk                                     | Mitigation                                                |
+| ---------------------------------------- | --------------------------------------------------------- |
+| **NotebookLM API quota or availability** | Implement retries, monitor quota usage.                   |
+| **Transcript too large**                 | Pre-chunk long transcripts, generate multi-part episodes. |
+| **RSS feed corruption**                  | Validate XML before writing, keep backups.                |
+| **Security of public links**             | Optionally use signed URLs with expiry.                   |
+
+---
+
+# Appendix
+
+### **NotebookLM Podcast API Notes**
+
+* Max 100k tokens input per request.
+* Output MP3 size typically 4–20 MB.
+* Processing time ≈ 60–90 seconds.
+
+### **Example CLI Test**
+
+```bash
+curl -X POST "https://YOUR_RUN_URL/make" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "transcript": "Today we discussed Totem OS and agent design...",
+    "title": "Amrit × Noesis — Sept 16",
+    "focus": "Summarize into 3 insights + 3 actions.",
+    "length": "STANDARD",
+    "languageCode": "en-US"
+  }'
+```
+
+---
