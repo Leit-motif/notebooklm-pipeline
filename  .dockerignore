@@ -1,0 +1,24 @@
+# Python
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+
+# Virtual env
+venv
+.env
+sa-key.json
+
+# Node
+node_modules
+
+# VCS and local
+.git
+.gitignore
+
+# Taskmaster (not needed in container)
+.taskmaster
+
+# Tests and docs (optional for runtime)
+tests
+docs
