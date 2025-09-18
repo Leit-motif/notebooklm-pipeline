@@ -3,9 +3,6 @@ from fastapi import APIRouter
 from pydantic import BaseModel, Field
 
 from app import settings
-from app.services.notebooklm import NotebookLMClient
-from app.services.storage import StorageClient
-from app.services.rss import RSSGenerator
 
 router = APIRouter()
 
@@ -33,6 +30,11 @@ async def make_podcast(payload: PodcastRequest) -> PodcastResponse:
     )
 
     try:
+        # Lazy-import to prevent startup failures if optional libs are missing
+        from app.services.notebooklm import NotebookLMClient  # noqa: WPS433
+        from app.services.storage import StorageClient  # noqa: WPS433
+        from app.services.rss import RSSGenerator  # noqa: WPS433
+
         notebook = NotebookLMClient(project_id=settings.GCP_PROJECT_ID)
         storage = StorageClient(bucket_name=settings.GCS_BUCKET_NAME)
         rss = RSSGenerator(
