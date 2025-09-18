@@ -1,5 +1,10 @@
 import os
-from dotenv import load_dotenv
+
+try:  # Make dotenv optional for Cloud Run
+    from dotenv import load_dotenv  # type: ignore
+except Exception:  # pragma: no cover
+    def load_dotenv() -> None:  # noop
+        return None
 
 load_dotenv()
 
